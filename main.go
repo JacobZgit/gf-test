@@ -17,14 +17,25 @@ package main
 import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/os/gtime"
+	"time"
 )
 
 func main() {
 	s := g.Server()
-	s.BindHandler("/cookie", func(r *ghttp.Request) {
-		datetime := r.Cookie.Get("datetime")
-		//r.Cookie.Set("datetime", gtime.Datetime())
-		r.Response.Write("datetime:", datetime)
+	s.SetSessionMaxAge(time.Minute)
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.ALL("/set", func(r *ghttp.Request) {
+			r.Session.Set("time", gtime.Timestamp())
+			r.Response.Write("ok")
+		})
+		group.ALL("/get", func(r *ghttp.Request) {
+			r.Response.Write(r.Session.Data())
+		})
+		group.ALL("/del", func(r *ghttp.Request) {
+			_ = r.Session.RemoveAll()
+			r.Response.Write("ok")
+		})
 	})
 	s.SetPort(8199)
 	s.Run()
